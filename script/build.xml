@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="struts-mini" basedir="." default="all">
+	<target name="init">
+		<property name="pkg_name" value="struts-mini"/>
+		<property name="jar_name" value="struts-mini-1.3.8.jar"/>
+		<property name='build_root' value="../../.."/>
+		<property name='work_dir' value="${build_root}/work/${pkg_name}"/>
+    	<property name='bin_dir' value="${build_root}/bin/${pkg_name}"/>
+	</target>
+
+    <target name="clean_jar" depends="init">
+		<delete file="${work_dir}/../${jar_name}"/>
+		<delete dir="${work_dir}"/>
+		<mkdir dir="${work_dir}"/>
+		
+		<unzip src="../../hotfixlib/struts-core.jar" dest="${work_dir}"/>
+    	<unzip src="../../hotfixlib/struts-el.jar" dest="${work_dir}"/>
+    	<unzip src="../../hotfixlib/struts-extras.jar" dest="${work_dir}"/>
+		<unzip src="../../hotfixlib/struts-taglib.jar" dest="${work_dir}"/>
+		<unzip src="../../hotfixlib/struts-tiles.jar" dest="${work_dir}"/>
+    </target>
+	
+	<target name="removelist" depends="init">
+		<loadfile property="removelist_txt" srcFile="removelist.txt"/>
+		<filelist id="removelist_id" dir="${work_dir}" files="${removelist_txt}"/>
+		<delete>
+			<filelist refid="removelist_id"/>
+		</delete>
+	</target>
+
+    <target name="clean_bin" depends="init">
+		<delete dir="${bin_dir}"/>
+		<mkdir dir="${bin_dir}"/>
+
+        <copy includeemptydirs="false" todir="${bin_dir}">
+            <fileset dir="../Source/Java">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="compile" depends="init">
+    	<property name="debuglevel" value="source,lines,vars"/>
+    	<property name="target" value="1.7"/>
+    	<property name="source" value="1.7"/>
+    	<property name="tomcat6lib" value="../../tomcat6lib"/>
+    	<property name="hotfixlib" value="../../hotfixlib"/>
+    	<path id="hypericorg.classpath">
+	        <pathelement location="${bin_dir}"/>
+	        <pathelement location="${tomcat6lib}/servlet-api.jar"/>
+	        <pathelement location="${tomcat6lib}/commons-logging-api-1.1.jar"/>
+    		<pathelement location="${tomcat6lib}/commons-chain-1.2.jar"/>
+    		<pathelement location="${tomcat6lib}/commons-digester-1.8.jar"/>
+    		<pathelement location="${tomcat6lib}/commons-beanutils-1.9.3.jar"/>
+
+	        <pathelement location="${hotfixlib}/struts-core.jar"/>
+    	</path>
+    
+        <javac debug="true" debuglevel="${debuglevel}" destdir="${bin_dir}" includeantruntime="false" source="${source}" target="${target}">
+            <src path="../Source/Java"/>
+            <classpath refid="hypericorg.classpath"/>
+        </javac>
+    </target>
+    
+	<target name="all" depends="init,clean_jar,removelist,clean_bin,compile">
+        <copy includeemptydirs="false" todir="${work_dir}">
+            <fileset dir="${bin_dir}">
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+		<delete>
+			<fileset dir="${work_dir}/org/apache/struts/upload">
+				<include name="CommonsMultipartRequestHandler*.class" />
+			</fileset>
+		</delete>
+        <jar jarfile="${work_dir}/../${jar_name}" compress="true" basedir="${work_dir}" manifest="${work_dir}/META-INF/MANIFEST.MF"/>
+    </target>
+	
+	<target name="clean" depends="init">
+		<delete file="${work_dir}/../${jar_name}"/>
+		<delete dir="${work_dir}"/>
+		<delete dir="${bin_dir}"/>
+	</target>
+</project>
